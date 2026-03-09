@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 
 // TODO: Create class Transaction.java
-// TODO: Create enum class AccountStatus.java (under development right now)
 
 public class BankAccount {
     private static int nextId = 1;
