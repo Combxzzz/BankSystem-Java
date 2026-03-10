@@ -9,8 +9,9 @@ import java.util.Objects;
 public class Transaction {
     private static int nextId = 1;
 
-    private final int bankAccountId;
     private final int transactionId;
+    private final BankAccount bankAccount;
+    private final BankAccount destinationBankAccount;
 
     private final TransactionType transactionType;
     private final BigDecimal amount;
@@ -18,11 +19,13 @@ public class Transaction {
     private final String description;
 
     public Transaction(
-            int bankAccountId,
+            BankAccount bankAccount,
+            BankAccount destinationBankAccount,
             TransactionType transactionType,
             BigDecimal amount,
             String description) {
 
+        Objects.requireNonNull(bankAccount, "Bank account cannot be null");
         Objects.requireNonNull(transactionType, "Transaction Type cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
 
@@ -30,10 +33,20 @@ public class Transaction {
             throw new IllegalArgumentException("Amount must be greater than 0");
         }
 
-        this.transactionId = nextId++;
-        this.bankAccountId = bankAccountId; // Not null
+        // Transfer case
+        if (transactionType == TransactionType.TRANSFER && destinationBankAccount == null) {
+            throw new IllegalArgumentException("Transfer must have destination account");
+        }
+
+        if (transactionType != TransactionType.TRANSFER && destinationBankAccount != null) {
+            throw new IllegalArgumentException("Only transfers can have destination account");
+        }
+
+        this.transactionId = nextId++; // ID
+        this.bankAccount =  bankAccount; // Not null
+        this.destinationBankAccount = destinationBankAccount; // Can be null except for transfer
         this.transactionType = transactionType; // Not null
-        this.amount = amount; // Not null || Zero
+        this.amount = amount; // Not null || Zero or negative
         this.date = LocalDateTime.now(); // Date
         this.description = description; // Can be blank or null
     }
@@ -42,12 +55,12 @@ public class Transaction {
         return transactionId;
     }
 
-    public int getBankAccountId() {
-        return bankAccountId;
-    }
-
     public BankAccount getBankAccount() {
         return bankAccount;
+    }
+
+    public BankAccount getDestinationBankAccount() {
+        return destinationBankAccount;
     }
 
     public TransactionType getTransactionType() {
@@ -81,7 +94,10 @@ public class Transaction {
     @Override
     public String toString() {
         return "Transaction{" +
-                "bankAccount=" + bankAccount +
+                "transactionId=" + transactionId +
+                ", bankAccountId=" + bankAccount.getAccountId() +
+                ", destinationBankAccountId=" +
+                (destinationBankAccount != null ? destinationBankAccount.getAccountId() : "null") +
                 ", transactionType=" + transactionType +
                 ", amount=" + amount +
                 ", date=" + date +
