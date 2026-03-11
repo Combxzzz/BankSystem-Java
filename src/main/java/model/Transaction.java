@@ -10,7 +10,7 @@ public class Transaction {
     private static int nextId = 1;
 
     private final int transactionId;
-    private final BankAccount bankAccount;
+    private final BankAccount senderBankAccount;
     private final BankAccount destinationBankAccount;
 
     private final TransactionType transactionType;
@@ -19,13 +19,13 @@ public class Transaction {
     private final String description;
 
     private Transaction(
-            BankAccount bankAccount,
+            BankAccount senderBankAccount,
             BankAccount destinationBankAccount,
             TransactionType transactionType,
             BigDecimal amount,
             String description) {
 
-        Objects.requireNonNull(bankAccount, "Bank account cannot be null");
+        Objects.requireNonNull(senderBankAccount, "Bank account cannot be null");
         Objects.requireNonNull(transactionType, "Transaction Type cannot be null");
         Objects.requireNonNull(amount, "Amount cannot be null");
 
@@ -43,7 +43,7 @@ public class Transaction {
         }
 
         this.transactionId = nextId++; // ID
-        this.bankAccount =  bankAccount; // Not null
+        this.senderBankAccount = senderBankAccount; // Not null
         this.transactionType = transactionType; // Transaction type
         this.destinationBankAccount = destinationBankAccount; // Must be null unless transaction type is TRANSFER
         this.amount = amount; // Not null || Zero or negative
@@ -55,8 +55,8 @@ public class Transaction {
         return transactionId;
     }
 
-    public BankAccount getBankAccount() {
-        return bankAccount;
+    public BankAccount getSenderBankAccount() {
+        return senderBankAccount;
     }
 
     public BankAccount getDestinationBankAccount() {
@@ -139,7 +139,7 @@ public class Transaction {
     public String toString() {
         return "Transaction{" +
                 "transactionId=" + transactionId +
-                ", bankAccountId=" + bankAccount.getAccountId() +
+                ", senderBankAccountId=" + senderBankAccount.getAccountId() +
                 ", destinationBankAccountId=" +
                 (destinationBankAccount != null ? destinationBankAccount.getAccountId() : "null") +
                 ", transactionType=" + transactionType +

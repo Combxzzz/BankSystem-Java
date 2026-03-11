@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+// TODO: Always set the initial balance to zero in the constructor.
 
 public class BankAccount {
     private static int nextId = 1;
@@ -24,8 +25,10 @@ public class BankAccount {
             throw new IllegalArgumentException("Initial balance cannot be negative");
         }
 
-        if (holder == null || holder.isBlank()) {
-            throw new IllegalArgumentException("holder cannot be null or blank");
+        Objects.requireNonNull(holder, "Holder cannot be null");
+
+        if (holder.isBlank()) {
+            throw new IllegalArgumentException("holder cannot be blank");
         }
 
         this.accountId = nextId++;
@@ -59,7 +62,7 @@ public class BankAccount {
         return createdAt;
     }
 
-    public void deposit(BigDecimal amount) {
+    public void deposit(BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -70,10 +73,13 @@ public class BankAccount {
             throw  new IllegalArgumentException("Amount must be greater than zero");
         }
 
-        this.balance = this.balance.add(amount);
+        addBalance(amount);
+
+        Transaction record = Transaction.deposit(this, amount, description);
+        transactions.add(record);
     }
 
-    public void withdraw(BigDecimal amount) {
+    public void withdraw(BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -88,10 +94,13 @@ public class BankAccount {
             throw new IllegalArgumentException("Amount cannot be greater than balance");
         }
 
-        this.balance = this.balance.subtract(amount);
+        subtractBalance(amount);
+
+        Transaction record = Transaction.withdraw(this, amount, description);
+        transactions.add(record);
     }
 
-    public void transfer(BankAccount destination, BigDecimal amount) {
+    public void transfer(BankAccount destination, BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -107,8 +116,20 @@ public class BankAccount {
             throw new IllegalArgumentException("Destination cannot receive transactions");
         }
 
-        withdraw(amount);
-        destination.deposit(amount);
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+
+        if (amount.compareTo(balance) > 0) {
+            throw new IllegalArgumentException("Amount cannot be greater than balance");
+        }
+
+        subtractBalance(amount);
+        destination.addBalance(amount);
+
+        Transaction record = Transaction.transfer(this, destination, amount, description);
+        transactions.add(record);
+        destination.transactions.add(record);
     }
 
     public void setAccountStatus(AccountStatus newStatus) {
@@ -120,6 +141,15 @@ public class BankAccount {
         }
 
         this.accountStatus = newStatus;
+    }
+
+    // Internal methods
+    private void addBalance(BigDecimal amount) {
+        this.balance = this.balance.add(amount);
+    }
+
+    private void subtractBalance(BigDecimal amount) {
+        this.balance = this.balance.subtract(amount);
     }
 
     @Override
