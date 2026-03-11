@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-// TODO: Create class Transaction.java
 
 public class BankAccount {
     private static int nextId = 1;

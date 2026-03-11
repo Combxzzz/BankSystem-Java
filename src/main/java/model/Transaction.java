@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-// TODO: Create an overload of constructors for Transaction types WITHDRAW and DEPOSIT, and another for Transaction type TRANSFER.
 // TODO: Perform the integration to automatically record a transfer for each transaction in the BankAccount class.
 
 public class Transaction {
