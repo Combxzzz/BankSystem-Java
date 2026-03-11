@@ -4,7 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-// TODO: Create the TransactionType EnumClass
+// TODO: Create an overload of constructors for Transaction types WITHDRAW and DEPOSIT, and another for Transaction type TRANSFER.
+// TODO: Perform the integration to automatically record a transfer for each transaction in the BankAccount class.
 
 public class Transaction {
     private static int nextId = 1;
@@ -18,7 +19,7 @@ public class Transaction {
     private final LocalDateTime date;
     private final String description;
 
-    public Transaction(
+    private Transaction(
             BankAccount bankAccount,
             BankAccount destinationBankAccount,
             TransactionType transactionType,
@@ -44,8 +45,8 @@ public class Transaction {
 
         this.transactionId = nextId++; // ID
         this.bankAccount =  bankAccount; // Not null
-        this.destinationBankAccount = destinationBankAccount; // Can be null except for transfer
-        this.transactionType = transactionType; // Not null
+        this.transactionType = transactionType; // Transaction type
+        this.destinationBankAccount = destinationBankAccount; // Must be null unless transaction type is TRANSFER
         this.amount = amount; // Not null || Zero or negative
         this.date = LocalDateTime.now(); // Date
         this.description = description; // Can be blank or null
@@ -77,6 +78,50 @@ public class Transaction {
 
     public String getDescription() {
         return description;
+    }
+
+    // Factory Methods
+    public static Transaction deposit(
+            BankAccount bankAccount,
+            BigDecimal amount,
+            String description) {
+
+        return new Transaction(
+                bankAccount,
+                null,
+                TransactionType.DEPOSIT,
+                amount,
+                description
+        );
+    }
+
+    public static Transaction withdraw(
+            BankAccount bankAccount,
+            BigDecimal amount,
+            String description) {
+
+        return new Transaction(
+                bankAccount,
+                null,
+                TransactionType.WITHDRAW,
+                amount,
+                description
+        );
+    }
+
+    public static Transaction transfer(
+            BankAccount bankAccount,
+            BankAccount destinationBankAccount,
+            BigDecimal amount,
+            String description) {
+
+        return new Transaction(
+                bankAccount,
+                destinationBankAccount,
+                TransactionType.TRANSFER,
+                amount,
+                description
+        );
     }
 
     @Override

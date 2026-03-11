@@ -16,7 +16,6 @@ public class BankAccount {
     private AccountStatus accountStatus;
     private final String holder;
     private BigDecimal balance;
-
     private final LocalDateTime createdAt;
 
     private final List<Transaction> transactions = new ArrayList<>();
