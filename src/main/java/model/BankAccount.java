@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-// TODO: Always set the initial balance to zero in the constructor.
+// TODO: Maintain encapsulation in relation to adding a Transaction record in BankAccount.
 
 public class BankAccount {
     private static int nextId = 1;
@@ -20,10 +20,7 @@ public class BankAccount {
 
     private final List<Transaction> transactions = new ArrayList<>();
 
-    public BankAccount(String holder, BigDecimal balance) {
-        if (balance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Initial balance cannot be negative");
-        }
+    public BankAccount(String holder) {
 
         Objects.requireNonNull(holder, "Holder cannot be null");
 
@@ -34,7 +31,7 @@ public class BankAccount {
         this.accountId = nextId++;
         this.accountStatus = AccountStatus.ACTIVE;
         this.holder = holder;
-        this.balance = balance;
+        this.balance = BigDecimal.ZERO;
         this.createdAt = LocalDateTime.now();
     }
 
