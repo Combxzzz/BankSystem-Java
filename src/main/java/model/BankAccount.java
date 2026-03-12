@@ -73,7 +73,7 @@ public class BankAccount {
         addBalance(amount);
 
         Transaction record = Transaction.deposit(this, amount, description);
-        transactions.add(record);
+        recordTransaction(record);
     }
 
     public void withdraw(BigDecimal amount, String description) {
@@ -94,7 +94,7 @@ public class BankAccount {
         subtractBalance(amount);
 
         Transaction record = Transaction.withdraw(this, amount, description);
-        transactions.add(record);
+        recordTransaction(record);
     }
 
     public void transfer(BankAccount destination, BigDecimal amount, String description) {
@@ -125,8 +125,8 @@ public class BankAccount {
         destination.addBalance(amount);
 
         Transaction record = Transaction.transfer(this, destination, amount, description);
-        transactions.add(record);
-        destination.transactions.add(record);
+        recordTransaction(record);
+        destination.recordTransaction(record);
     }
 
     public void setAccountStatus(AccountStatus newStatus) {
@@ -147,6 +147,10 @@ public class BankAccount {
 
     private void subtractBalance(BigDecimal amount) {
         this.balance = this.balance.subtract(amount);
+    }
+
+    private void recordTransaction(Transaction transaction) {
+        this.transactions.add(transaction);
     }
 
     @Override

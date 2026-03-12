@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-// TODO: Perform the integration to automatically record a transfer for each transaction in the BankAccount class.
 
 public class Transaction {
     private static int nextId = 1;
@@ -42,13 +41,13 @@ public class Transaction {
             throw new IllegalArgumentException("Only transfers can have destination account");
         }
 
-        this.transactionId = nextId++; // ID
-        this.senderBankAccount = senderBankAccount; // Not null
-        this.transactionType = transactionType; // Transaction type
-        this.destinationBankAccount = destinationBankAccount; // Must be null unless transaction type is TRANSFER
-        this.amount = amount; // Not null || Zero or negative
-        this.date = LocalDateTime.now(); // Date
-        this.description = description; // Can be blank or null
+        this.transactionId = nextId++;                          // ID
+        this.senderBankAccount = senderBankAccount;             // Not null
+        this.transactionType = transactionType;                 // Transaction type
+        this.destinationBankAccount = destinationBankAccount;   // Must be null unless transaction type is TRANSFER
+        this.amount = amount;                                   // Not null || Zero or negative
+        this.date = LocalDateTime.now();                        // Date
+        this.description = description;                         // Can be blank or null
     }
 
     public int getTransactionId() {
