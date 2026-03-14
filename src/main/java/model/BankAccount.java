@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-// TODO: Maintain encapsulation in relation to adding a Transaction record in BankAccount.
 
 public class BankAccount {
     private static int nextId = 1;
