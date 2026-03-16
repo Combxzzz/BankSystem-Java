@@ -66,7 +66,7 @@ public class BankAccount {
         Objects.requireNonNull(amount, "Amount cannot be null");
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw  new IllegalArgumentException("Amount must be greater than zero");
+            throw new IllegalArgumentException("Amount must be greater than zero");
         }
 
         addBalance(amount);

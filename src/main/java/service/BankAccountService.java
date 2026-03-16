@@ -1,5 +1,6 @@
 package service;
 
+import model.AccountStatus;
 import model.BankAccount;
 import model.Transaction;
 import repository.BankAccountRepository;
@@ -7,36 +8,35 @@ import repository.BankAccountRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class BankAccountService {
-    private final BankAccountRepository bankAccountRepository;
+    private final BankAccountRepository repository;
 
-    public BankAccountService(BankAccountRepository bankAccountRepository) {
-        this.bankAccountRepository = bankAccountRepository;
+    public BankAccountService(BankAccountRepository repository) {
+        this.repository = repository;
     }
 
     private BankAccount getAccountOrThrow(int id) {
-        return bankAccountRepository.findById(id).orElseThrow(() -> new IllegalArgumentException(
+        return repository.findById(id).orElseThrow(() -> new IllegalArgumentException(
                 "Account ID " + id + " does not exist"
         ));
     }
 
     public BankAccount saveBankAccount(BankAccount bankAccount) {
-        return bankAccountRepository.save(bankAccount);
+        return repository.save(bankAccount);
     }
 
     public void deleteById(int accountId) {
         getAccountOrThrow(accountId);
-        bankAccountRepository.deleteById(accountId);
+        repository.deleteById(accountId);
     }
 
-    public Optional<BankAccount> findById(int id) {
-        return bankAccountRepository.findById(id);
+    public BankAccount findById(int id) {
+        return getAccountOrThrow(id);
     }
 
     public List<BankAccount> findAll() {
-        return bankAccountRepository.findAll();
+        return repository.findAll();
     }
 
     public List<Transaction> findAllAccountTransactions(int accountId) {
@@ -62,5 +62,11 @@ public class BankAccountService {
         BankAccount destination = getAccountOrThrow(destinationAccountId);
 
         sender.transfer(destination, amount, description);
+    }
+
+    public void switchAccountStatus(int accountId, AccountStatus newAccountStatus) {
+        BankAccount account = getAccountOrThrow(accountId);
+
+        account.setAccountStatus(newAccountStatus);
     }
 }
