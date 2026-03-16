@@ -58,7 +58,7 @@ public class BankAccount {
         return createdAt;
     }
 
-    public void deposit(BigDecimal amount, String description) {
+    public Transaction deposit(BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -73,9 +73,11 @@ public class BankAccount {
 
         Transaction record = Transaction.deposit(this, amount, description);
         recordTransaction(record);
+
+        return record;
     }
 
-    public void withdraw(BigDecimal amount, String description) {
+    public Transaction withdraw(BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -94,9 +96,11 @@ public class BankAccount {
 
         Transaction record = Transaction.withdraw(this, amount, description);
         recordTransaction(record);
+
+        return record;
     }
 
-    public void transfer(BankAccount destination, BigDecimal amount, String description) {
+    public Transaction transfer(BankAccount destination, BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -126,6 +130,8 @@ public class BankAccount {
         Transaction record = Transaction.transfer(this, destination, amount, description);
         recordTransaction(record);
         destination.recordTransaction(record);
+
+        return record;
     }
 
     public void setAccountStatus(AccountStatus newStatus) {
