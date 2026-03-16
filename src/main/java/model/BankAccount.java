@@ -1,5 +1,7 @@
 package model;
 
+import model.enums.AccountStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

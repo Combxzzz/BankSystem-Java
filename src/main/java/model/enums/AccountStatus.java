@@ -1,4 +1,4 @@
-package model;
+package model.enums;
 
 public enum AccountStatus {
     ACTIVE(true),

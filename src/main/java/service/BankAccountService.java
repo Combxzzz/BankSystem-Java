@@ -1,6 +1,6 @@
 package service;
 
-import model.AccountStatus;
+import model.enums.AccountStatus;
 import model.BankAccount;
 import model.Transaction;
 import repository.BankAccountRepository;
