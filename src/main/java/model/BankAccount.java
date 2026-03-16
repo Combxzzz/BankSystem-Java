@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-// TODO: Maintain encapsulation in relation to adding a Transaction record in BankAccount.
 
 public class BankAccount {
     private static int nextId = 1;
@@ -59,7 +58,7 @@ public class BankAccount {
         return createdAt;
     }
 
-    public void deposit(BigDecimal amount, String description) {
+    public Transaction deposit(BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -67,16 +66,18 @@ public class BankAccount {
         Objects.requireNonNull(amount, "Amount cannot be null");
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw  new IllegalArgumentException("Amount must be greater than zero");
+            throw new IllegalArgumentException("Amount must be greater than zero");
         }
 
         addBalance(amount);
 
         Transaction record = Transaction.deposit(this, amount, description);
         recordTransaction(record);
+
+        return record;
     }
 
-    public void withdraw(BigDecimal amount, String description) {
+    public Transaction withdraw(BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -95,9 +96,11 @@ public class BankAccount {
 
         Transaction record = Transaction.withdraw(this, amount, description);
         recordTransaction(record);
+
+        return record;
     }
 
-    public void transfer(BankAccount destination, BigDecimal amount, String description) {
+    public Transaction transfer(BankAccount destination, BigDecimal amount, String description) {
         if (!this.accountStatus.canTransact()) {
             throw new IllegalArgumentException("The account must be ACTIVE to make transactions");
         }
@@ -127,6 +130,8 @@ public class BankAccount {
         Transaction record = Transaction.transfer(this, destination, amount, description);
         recordTransaction(record);
         destination.recordTransaction(record);
+
+        return record;
     }
 
     public void setAccountStatus(AccountStatus newStatus) {
