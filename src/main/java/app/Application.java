@@ -6,6 +6,7 @@ import repository.TransactionRepository;
 import service.BankAccountService;
 import service.TransactionService;
 
+import java.math.BigDecimal;
 import java.util.Scanner;
 
 public class Application {
@@ -65,6 +66,11 @@ public class Application {
 
         switch (option) {
             case 1 -> createAccount(scanner, bankAccountService, session);
+            case 2 -> deposit(scanner, bankAccountService, session);
+            case 3 -> withdraw(scanner, bankAccountService, session);
+            case 4 -> transfer(scanner, bankAccountService, session);
+            case 5 -> System.out.println(bankAccountService.findAll()); // Temporary
+            case 6 -> System.out.println(bankAccountService.findAllAccountTransactions(scanner.nextInt())); // Temporary
             case 0 -> { return false; }
         }
 
@@ -86,5 +92,42 @@ public class Application {
         System.out.println("Account created with ID " + account.getAccountId());
         System.out.println("press ENTER to continue...");
         scanner.nextLine();
+    }
+
+    public static void deposit(Scanner scanner, BankAccountService bankAccountService, Session session) {
+        System.out.print("\nEnter the deposit amount: ");
+        BigDecimal amount = scanner.nextBigDecimal();
+        scanner.nextLine();
+
+        System.out.print("Enter a description(Optional): ");
+        String description = scanner.nextLine();
+
+        bankAccountService.deposit(session.mainAccount.getAccountId(), amount, description);
+    }
+
+    public static void withdraw(Scanner scanner, BankAccountService bankAccountService, Session session) {
+        System.out.print("\nEnter the withdraw amount: ");
+        BigDecimal amount = scanner.nextBigDecimal();
+        scanner.nextLine();
+
+        System.out.print("Enter a description(Optional): ");
+        String description = scanner.nextLine();
+
+        bankAccountService.withdraw(session.mainAccount.getAccountId(), amount, description);
+    }
+
+    public static void transfer(Scanner scanner, BankAccountService bankAccountService, Session session) {
+        System.out.print("\nEnter the amount to be transferred: ");
+        BigDecimal amount = scanner.nextBigDecimal();
+        scanner.nextLine();
+
+        System.out.print("Enter the receiver's account ID: ");
+        int destinationId = scanner.nextInt();
+        scanner.nextLine();
+
+        System.out.print("Enter a description: ");
+        String description = scanner.nextLine();
+
+        bankAccountService.transfer(session.mainAccount.getAccountId(), destinationId, amount, description);
     }
 }
