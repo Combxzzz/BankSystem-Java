@@ -1,12 +1,14 @@
 package app;
 
 import model.BankAccount;
+import model.Transaction;
 import repository.BankAccountRepository;
 import repository.TransactionRepository;
 import service.BankAccountService;
 import service.TransactionService;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Scanner;
 
 public class Application {
@@ -50,7 +52,7 @@ public class Application {
         System.out.println("3 - Withdraw");
         System.out.println("4 - Transfer");
         System.out.println("5 - List/Find accounts");
-        System.out.println("6 - View/Find transactions");
+        System.out.println("6 - List/Find transactions");
         System.out.println("0 - Exit");
 
         int option;
@@ -69,8 +71,8 @@ public class Application {
             case 2 -> deposit(scanner, bankAccountService, session);
             case 3 -> withdraw(scanner, bankAccountService, session);
             case 4 -> transfer(scanner, bankAccountService, session);
-            case 5 -> System.out.println(bankAccountService.findAll()); // Temporary
-            case 6 -> System.out.println(bankAccountService.findAllAccountTransactions(scanner.nextInt())); // Temporary
+            case 5 -> listOrFindAccount(scanner, bankAccountService);
+            case 6 -> listOrFindTransaction(scanner, bankAccountService, transactionService);
             case 0 -> { return false; }
         }
 
@@ -129,5 +131,79 @@ public class Application {
         String description = scanner.nextLine();
 
         bankAccountService.transfer(session.mainAccount.getAccountId(), destinationId, amount, description);
+    }
+
+    public static void listOrFindAccount(Scanner scanner, BankAccountService bankAccountService) {
+        System.out.print("(L)ist all accounts or (F)ind specific account: ");
+        String option = scanner.nextLine();
+
+        switch (option.toUpperCase().charAt(0)) {
+            case 'L':
+                List<BankAccount> bankAccounts = bankAccountService.findAll();
+                System.out.println("--------------------------------------------------------");
+                for (BankAccount bankAccount : bankAccounts) {
+                    printAccount(bankAccount);
+                    System.out.println("--------------------------------------------------------");
+                }
+                System.out.println();
+                break;
+            case 'F':
+                System.out.print("Enter the account ID to be searched: ");
+                BankAccount account = bankAccountService.findById(scanner.nextInt());
+
+                System.out.println("--------------------------------------------------------");
+                printAccount(account);
+                System.out.println("--------------------------------------------------------");
+                break;
+        }
+    }
+
+    public static void listOrFindTransaction(Scanner scanner,
+                                             BankAccountService bankAccountService,
+                                             TransactionService transactionService) {
+        System.out.print("(L)ist all specific account transactions or (F)ind a specific transaction: ");
+        String option = scanner.nextLine();
+
+        switch (option.toUpperCase().charAt(0)) {
+            case 'L':
+                System.out.print("Type the account ID: ");
+                List<Transaction> transactions = bankAccountService
+                        .findAllAccountTransactions(scanner.nextInt());
+
+                System.out.println("--------------------------------------------------------");
+                for (Transaction transaction : transactions) {
+                    printTransaction(transaction);
+                    System.out.println("--------------------------------------------------------");
+                }
+                System.out.println();
+                break;
+            case 'F':
+                System.out.println("Enter the transaction ID to be searched: ");
+                Transaction transaction = transactionService.findById(scanner.nextInt());
+
+                System.out.println("--------------------------------------------------------");
+                printTransaction(transaction);
+                System.out.println("--------------------------------------------------------");
+                break;
+        }
+    }
+
+    private static void printAccount(BankAccount bankAccount) {
+        System.out.println("ID: "               + bankAccount.getAccountId());
+        System.out.println("Holder: "           + bankAccount.getHolder());
+        System.out.println("Balance: "          + bankAccount.getBalance());
+        System.out.println("Status: "           + bankAccount.getAccountStatus());
+        System.out.println("Create date: "      + bankAccount.getCreatedAt());
+    }
+
+    private static void printTransaction(Transaction transaction) {
+        System.out.println("ID: "               + transaction.getTransactionId());
+        System.out.println("Sender ID: "        + transaction.getSenderBankAccount().getAccountId());
+        System.out.println("Receiver's ID: "    + transaction.getSenderBankAccount().getAccountId());
+        System.out.println("Type: "             + transaction.getTransactionType());
+        System.out.println("Amount: "           + transaction.getAmount());
+        System.out.println("Create date: "      + transaction.getDate());
+        System.out.println("Description: "      + (transaction.getDescription().isEmpty() || transaction.getDescription() == null ?
+                "null" : transaction.getDescription()));
     }
 }
