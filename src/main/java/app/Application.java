@@ -2,6 +2,7 @@ package app;
 
 import model.BankAccount;
 import model.Transaction;
+import model.enums.AccountStatus;
 import repository.BankAccountRepository;
 import repository.TransactionRepository;
 import service.BankAccountService;
@@ -41,6 +42,8 @@ public class Application {
                     4 - Transfer
                     5 - Accounts
                     6 - Transactions
+                    7 - Switch Account
+                    8 - Switch Account Status
                     0 - Exit
                     
                     Option:""");
@@ -52,6 +55,7 @@ public class Application {
                 case 4 -> transfer(bankService, session);
                 case 5 -> accountsMenu(bankService);
                 case 6 -> transactionsMenu(bankService, transactionService);
+                case 8 -> switchAccountStatus(bankService, session);
                 case 0 -> {
                     println("Exiting...");
                     return;
@@ -119,31 +123,35 @@ public class Application {
     private static void clearScreen() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
+        // TODO: Not Working
     }
 
     // ================= FEATURES =================
 
     private static void createAccount(BankAccountService service, Session session) {
-        println("\nCreate Account");
-        System.out.print("Holder name: ");
-        String name = scanner.nextLine();
+        while (true) {
+            println("\nCreate Account");
+            System.out.print("Holder name: ");
+            String name = scanner.nextLine();
 
-        try {
-            BankAccount acc = new BankAccount(name);
-            service.saveBankAccount(acc);
+            try {
+                BankAccount acc = new BankAccount(name);
+                service.saveBankAccount(acc);
 
-            if (session.mainAccount == null) {
-                session.mainAccount = acc;
-                println("Main account defined!");
+                if (session.mainAccount == null) {
+                    session.mainAccount = acc;
+                    println("Main account defined!");
+                }
+
+                println("Account created! ID: " + acc.getAccountId());
+                break;
+            } catch (IllegalArgumentException e) {
+                println("Error: " + e.getMessage());
+            } catch (Exception e) {
+                println("An unexpected error occurred: " + e.getMessage());
             }
-
-            println("Account created! ID: " + acc.getAccountId());
-        } catch (IllegalArgumentException e) {
-            println("Error: " + e.getMessage());
-        } catch (Exception e) {
-            println("An unexpected error occurred: " + e.getMessage());
+            println("");
         }
-        println("");
     }
 
     private static void deposit(BankAccountService service, Session session) {
@@ -248,6 +256,62 @@ public class Application {
             } catch (Exception e) {
                 println("An unexpected error occurred: " + e.getMessage());
             }
+        }
+    }
+
+    private static void switchAccountStatus(BankAccountService bankAccountService,
+                                            Session session) {
+        println("\n=== Switch Account Status ===");
+        println("Warning: CLOSED accounts cannot be recovered or used for transfers.");
+
+        String option;
+
+        while (true) {
+            System.out.print("Do you really want to change your account status? (Y/N): ");
+            option = scanner.nextLine().trim().toUpperCase();
+
+            if (option.equals("Y") || option.equals("N")) {
+                break;
+            }
+
+            println("Invalid option. Please type Y or N.");
+        }
+
+        if (option.equals("N")) {
+            println("Account status change cancelled!");
+            return;
+        }
+
+        AccountStatus newAccountStatus = null;
+
+        while (newAccountStatus == null) {
+            println("\nSelect a new account status:");
+
+            int status = readInt("""
+                
+                1 - ACTIVE
+                2 - BLOCKED
+                3 - CLOSED
+                
+                Option:""");
+
+            switch (status) {
+                case 1 -> newAccountStatus = AccountStatus.ACTIVE;
+                case 2 -> newAccountStatus = AccountStatus.BLOCKED;
+                case 3 -> newAccountStatus = AccountStatus.CLOSED;
+                default -> println("Invalid option. Try again.");
+            }
+        }
+
+        BankAccount account = bankAccountService.findById(session.mainAccount.getAccountId());
+
+        try {
+            account.setAccountStatus(newAccountStatus);
+            println("Account status changed successfully!");
+        } catch (IllegalArgumentException e) {
+            println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            println("Unexpected error: " + e.getMessage());
         }
     }
 
