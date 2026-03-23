@@ -12,198 +12,268 @@ import java.util.List;
 import java.util.Scanner;
 
 public class Application {
-    public static void main(String[] args) {
-        BankAccountRepository bankAccountRepository = new BankAccountRepository();
-        TransactionRepository transactionRepository = new TransactionRepository();
 
-        BankAccountService bankAccountService = new BankAccountService(
-                bankAccountRepository,
-                transactionRepository
+    private static final Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        BankAccountService bankService = new BankAccountService(
+                new BankAccountRepository(),
+                new TransactionRepository()
         );
-        TransactionService transactionService = new TransactionService(transactionRepository);
+
+        TransactionService transactionService = new TransactionService(new TransactionRepository());
 
         Session session = new Session();
-        session.mainAccount = null;
 
-        Scanner scanner = new Scanner(System.in);
-        boolean running = true;
+        println("\nWelcome to Bank System");
+        createAccount(bankService, session);
 
-        System.out.println("You don't have a main account yet, create one now.");
-        createAccount(scanner, bankAccountService, session);
+        while (true) {
+            clearScreen();
+            showHeader(session);
 
-        while (running) {
-            running = menu(scanner, bankAccountService, transactionService, session);
+            int option = readInt("""
+                    
+                    === MENU ===
+                    1 - Create Account
+                    2 - Deposit
+                    3 - Withdraw
+                    4 - Transfer
+                    5 - Accounts
+                    6 - Transactions
+                    0 - Exit
+                    
+                    Option:""");
+
+            switch (option) {
+                case 1 -> createAccount(bankService, session);
+                case 2 -> deposit(bankService, session);
+                case 3 -> withdraw(bankService, session);
+                case 4 -> transfer(bankService, session);
+                case 5 -> accountsMenu(bankService);
+                case 6 -> transactionsMenu(bankService, transactionService);
+                case 0 -> {
+                    println("Exiting...");
+                    return;
+                }
+                default -> println("Invalid option");
+            }
+
+            pause();
         }
     }
 
-    public static boolean menu(Scanner scanner,
-                               BankAccountService bankAccountService,
-                               TransactionService transactionService,
-                               Session session) {
+    // ================= UI HELPERS =================
 
-        System.out.println("ID: " + session.mainAccount.getAccountId());
-        System.out.println("Holder: " + session.mainAccount.getHolder());
-        System.out.println("Account status: " + session.mainAccount.getAccountStatus());
-        System.out.println("Balance: " + session.mainAccount.getBalance());
+    private static void showHeader(Session session) {
+        BankAccount acc = session.mainAccount;
 
-        System.out.println("\n=== BANK SYSTEM ===");
-        System.out.println("1 - Create account");
-        System.out.println("2 - Deposit");
-        System.out.println("3 - Withdraw");
-        System.out.println("4 - Transfer");
-        System.out.println("5 - List/Find accounts");
-        System.out.println("6 - List/Find transactions");
-        System.out.println("0 - Exit");
-
-        int option;
-        try {
-            System.out.print("Option: ");
-            option = scanner.nextInt();
-            scanner.nextLine();
-        } catch (Exception e) {
-            System.out.println("Invalid entry");
-            scanner.nextLine();
-            return true;
-        }
-
-        switch (option) {
-            case 1 -> createAccount(scanner, bankAccountService, session);
-            case 2 -> deposit(scanner, bankAccountService, session);
-            case 3 -> withdraw(scanner, bankAccountService, session);
-            case 4 -> transfer(scanner, bankAccountService, session);
-            case 5 -> listOrFindAccount(scanner, bankAccountService);
-            case 6 -> listOrFindTransaction(scanner, bankAccountService, transactionService);
-            case 0 -> { return false; }
-        }
-
-        return true;
+        println("====================================");
+        println("MAIN ACCOUNT");
+        println("");
+        println("ID: " + acc.getAccountId());
+        println("Holder: " + acc.getHolder());
+        println("Balance: " + acc.getBalance());
+        println("Status: " + acc.getAccountStatus());
+        println("");
+        println("====================================");
     }
 
-    public static void createAccount(Scanner scanner, BankAccountService bankAccountService, Session session) {
-        System.out.print("\nHolder name: ");
+    private static void println(String text) {
+        System.out.println(text);
+    }
+
+    private static void pause() {
+        println("\nPress ENTER to continue...");
+        scanner.nextLine();
+    }
+
+    private static int readInt(String message) {
+        while (true) {
+            try {
+                System.out.print(message);
+                int value = scanner.nextInt();
+                scanner.nextLine();
+                return value;
+            } catch (Exception e) {
+                println("Invalid number");
+                scanner.nextLine();
+            }
+        }
+    }
+
+    private static BigDecimal readBigDecimal(String message) {
+        while (true) {
+            try {
+                System.out.print(message);
+                BigDecimal value = scanner.nextBigDecimal();
+                scanner.nextLine();
+                return value;
+            } catch (Exception e) {
+                println("Invalid value");
+                scanner.nextLine();
+            }
+        }
+    }
+
+    private static void clearScreen() {
+        System.out.print("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    // ================= FEATURES =================
+
+    private static void createAccount(BankAccountService service, Session session) {
+        println("\nCreate Account");
+        System.out.print("Holder name: ");
         String name = scanner.nextLine();
 
-        BankAccount account = new BankAccount(name);
-        bankAccountService.saveBankAccount(account);
+        try {
+            BankAccount acc = new BankAccount(name);
+            service.saveBankAccount(acc);
 
-        if (session.mainAccount == null) {
-            session.mainAccount = account;
-            System.out.println("Main account defined!");
+            if (session.mainAccount == null) {
+                session.mainAccount = acc;
+                println("Main account defined!");
+            }
+
+            println("Account created! ID: " + acc.getAccountId());
+        } catch (IllegalArgumentException e) {
+            println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            println("An unexpected error occurred: " + e.getMessage());
         }
-
-        System.out.println("Account created with ID " + account.getAccountId());
-        System.out.println("press ENTER to continue...");
-        scanner.nextLine();
+        println("");
     }
 
-    public static void deposit(Scanner scanner, BankAccountService bankAccountService, Session session) {
-        System.out.print("\nEnter the deposit amount: ");
-        BigDecimal amount = scanner.nextBigDecimal();
-        scanner.nextLine();
+    private static void deposit(BankAccountService service, Session session) {
+        println("\nDeposit");
 
-        System.out.print("Enter a description(Optional): ");
-        String description = scanner.nextLine();
+        BigDecimal amount = readBigDecimal("Amount: ");
+        System.out.print("Description: ");
+        String desc = scanner.nextLine();
 
-        bankAccountService.deposit(session.mainAccount.getAccountId(), amount, description);
-    }
-
-    public static void withdraw(Scanner scanner, BankAccountService bankAccountService, Session session) {
-        System.out.print("\nEnter the withdraw amount: ");
-        BigDecimal amount = scanner.nextBigDecimal();
-        scanner.nextLine();
-
-        System.out.print("Enter a description(Optional): ");
-        String description = scanner.nextLine();
-
-        bankAccountService.withdraw(session.mainAccount.getAccountId(), amount, description);
-    }
-
-    public static void transfer(Scanner scanner, BankAccountService bankAccountService, Session session) {
-        System.out.print("\nEnter the amount to be transferred: ");
-        BigDecimal amount = scanner.nextBigDecimal();
-        scanner.nextLine();
-
-        System.out.print("Enter the receiver's account ID: ");
-        int destinationId = scanner.nextInt();
-        scanner.nextLine();
-
-        System.out.print("Enter a description: ");
-        String description = scanner.nextLine();
-
-        bankAccountService.transfer(session.mainAccount.getAccountId(), destinationId, amount, description);
-    }
-
-    public static void listOrFindAccount(Scanner scanner, BankAccountService bankAccountService) {
-        System.out.print("(L)ist all accounts or (F)ind specific account: ");
-        String option = scanner.nextLine();
-
-        switch (option.toUpperCase().charAt(0)) {
-            case 'L':
-                List<BankAccount> bankAccounts = bankAccountService.findAll();
-                System.out.println("--------------------------------------------------------");
-                for (BankAccount bankAccount : bankAccounts) {
-                    printAccount(bankAccount);
-                    System.out.println("--------------------------------------------------------");
-                }
-                System.out.println();
-                break;
-            case 'F':
-                System.out.print("Enter the account ID to be searched: ");
-                BankAccount account = bankAccountService.findById(scanner.nextInt());
-
-                System.out.println("--------------------------------------------------------");
-                printAccount(account);
-                System.out.println("--------------------------------------------------------");
-                break;
+        try {
+            service.deposit(session.mainAccount.getAccountId(), amount, desc);
+            println("Deposit successful!");
+        } catch (IllegalArgumentException e) {
+            println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            println("An unexpected error occurred: " + e.getMessage());
         }
+        println("");
     }
 
-    public static void listOrFindTransaction(Scanner scanner,
-                                             BankAccountService bankAccountService,
-                                             TransactionService transactionService) {
-        System.out.print("(L)ist all specific account transactions or (F)ind a specific transaction: ");
-        String option = scanner.nextLine();
+    private static void withdraw(BankAccountService service, Session session) {
+        println("\nWithdraw");
 
-        switch (option.toUpperCase().charAt(0)) {
-            case 'L':
-                System.out.print("Type the account ID: ");
-                List<Transaction> transactions = bankAccountService
-                        .findAllAccountTransactions(scanner.nextInt());
+        BigDecimal amount = readBigDecimal("Amount: ");
+        System.out.print("Description: ");
+        String desc = scanner.nextLine();
 
-                System.out.println("--------------------------------------------------------");
-                for (Transaction transaction : transactions) {
-                    printTransaction(transaction);
-                    System.out.println("--------------------------------------------------------");
-                }
-                System.out.println();
-                break;
-            case 'F':
-                System.out.println("Enter the transaction ID to be searched: ");
-                Transaction transaction = transactionService.findById(scanner.nextInt());
+        try {
+            service.withdraw(session.mainAccount.getAccountId(), amount, desc);
+            println("Withdraw successful!");
+        } catch (IllegalArgumentException e) {
+            println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            println("An unexpected error occurred: " + e.getMessage());
+        }
+        println("");
+    }
 
-                System.out.println("--------------------------------------------------------");
-                printTransaction(transaction);
-                System.out.println("--------------------------------------------------------");
-                break;
+    private static void transfer(BankAccountService service, Session session) {
+        println("\nTransfer");
+
+        BigDecimal amount = readBigDecimal("Amount: ");
+        int destId = readInt("Destination account ID: ");
+        System.out.print("Description: ");
+        String desc = scanner.nextLine();
+
+        try {
+            service.transfer(session.mainAccount.getAccountId(), destId, amount, desc);
+            println("Transfer successful!");
+        } catch (IllegalArgumentException e) {
+            println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            println("An unexpected error occurred: " + e.getMessage());
+        }
+        println("");
+    }
+
+    private static void accountsMenu(BankAccountService service) {
+        String option;
+
+        System.out.print("(L)ist or (F)ind: ");
+        option = scanner.nextLine().toUpperCase();
+
+        if (option.startsWith("L")) {
+            List<BankAccount> accounts = service.findAll();
+            accounts.forEach(Application::printAccount);
+        } else {
+            int id = readInt("Account ID: ");
+            try {
+                printAccount(service.findById(id));
+            } catch (IllegalArgumentException e) {
+                println("Error: " + e.getMessage());
+            } catch (Exception e) {
+                println("An unexpected error occurred: " + e.getMessage());
+            }
         }
     }
 
-    private static void printAccount(BankAccount bankAccount) {
-        System.out.println("ID: "               + bankAccount.getAccountId());
-        System.out.println("Holder: "           + bankAccount.getHolder());
-        System.out.println("Balance: "          + bankAccount.getBalance());
-        System.out.println("Status: "           + bankAccount.getAccountStatus());
-        System.out.println("Create date: "      + bankAccount.getCreatedAt());
+    private static void transactionsMenu(BankAccountService bankService,
+                                         TransactionService transactionService) {
+        String option;
+
+        System.out.print("(L)ist or (F)ind: ");
+        option = scanner.nextLine().toUpperCase();
+
+        if (option.startsWith("L")) {
+            int id = readInt("Account ID: ");
+            try {
+                List<Transaction> list = bankService.findAllAccountTransactions(id);
+                list.forEach(Application::printTransaction);
+            } catch (IllegalArgumentException e) {
+                println("Error: " + e.getMessage());
+            } catch (Exception e) {
+                println("An unexpected error occurred: " + e.getMessage());
+            }
+        } else {
+            int id = readInt("Transaction ID: ");
+            try {
+                printTransaction(transactionService.findById(id));
+            } catch (IllegalArgumentException e) {
+                println("Error: " + e.getMessage());
+            } catch (Exception e) {
+                println("An unexpected error occurred: " + e.getMessage());
+            }
+        }
     }
 
-    private static void printTransaction(Transaction transaction) {
-        System.out.println("ID: "               + transaction.getTransactionId());
-        System.out.println("Sender ID: "        + transaction.getSenderBankAccount().getAccountId());
-        System.out.println("Receiver's ID: "    + transaction.getSenderBankAccount().getAccountId());
-        System.out.println("Type: "             + transaction.getTransactionType());
-        System.out.println("Amount: "           + transaction.getAmount());
-        System.out.println("Create date: "      + transaction.getDate());
-        System.out.println("Description: "      + (transaction.getDescription().isEmpty() || transaction.getDescription() == null ?
-                "null" : transaction.getDescription()));
+    // ================= PRINT =================
+
+    private static void printAccount(BankAccount acc) {
+        println("----------------------------");
+        println("ID: " + acc.getAccountId());
+        println("Holder: " + acc.getHolder());
+        println("Balance: " + acc.getBalance());
+        println("Status: " + acc.getAccountStatus());
+        println("Created: " + acc.getCreatedAt());
+        println("----------------------------");
+        println("");
+    }
+
+    private static void printTransaction(Transaction t) {
+        println("----------------------------");
+        println("ID: " + t.getTransactionId());
+        println("From: " + t.getSenderBankAccount().getAccountId());
+        println("To: " + (t.getDestinationBankAccount() != null ? t.getDestinationBankAccount().getAccountId() : "N/A"));
+        println("Type: " + t.getTransactionType());
+        println("Amount: " + t.getAmount());
+        println("Date: " + t.getDate());
+        println("Description: " + (t.getDescription() == null || t.getDescription().isEmpty() ? "null" : t.getDescription()));
+        println("----------------------------");
+        println("");
     }
 }
