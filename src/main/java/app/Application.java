@@ -55,7 +55,8 @@ public class Application {
                 case 4 -> transfer(bankService, session);
                 case 5 -> accountsMenu(bankService);
                 case 6 -> transactionsMenu(bankService, transactionService);
-                case 8 -> switchAccountStatus(bankService, session);
+                case 7 -> switchAccountMenu(bankService, scanner, session);
+                case 8 -> switchAccountStatusMenu(bankService, session);
                 case 0 -> {
                     println("Exiting...");
                     return;
@@ -123,7 +124,7 @@ public class Application {
     private static void clearScreen() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
-        // TODO: Not Working
+        // Working via terminal only
     }
 
     // ================= FEATURES =================
@@ -259,7 +260,7 @@ public class Application {
         }
     }
 
-    private static void switchAccountStatus(BankAccountService bankAccountService,
+    private static void switchAccountStatusMenu(BankAccountService bankAccountService,
                                             Session session) {
         println("\n=== Switch Account Status ===");
         println("Warning: CLOSED accounts cannot be recovered or used for transfers.");
@@ -313,6 +314,47 @@ public class Application {
         } catch (Exception e) {
             println("Unexpected error: " + e.getMessage());
         }
+    }
+
+    private static void switchAccountMenu(BankAccountService bankAccountService, Scanner scanner, Session session) {
+        println("\n=== Switch Account ===");
+
+        int id = readInt("Enter the account ID for switch: ");
+
+        try {
+            BankAccount targetAccount = bankAccountService.findById(id);
+
+            println("Account found!");
+            printAccount(targetAccount);
+
+            String option;
+            while (true) {
+                System.out.print("Do you really want to switch to this account? (Y/N): ");
+                option = scanner.nextLine().trim().toUpperCase();
+
+                if (option.equals("Y") || option.equals("N")) {
+                    break;
+                }
+
+                println("Invalid option, please type Y or N");
+            }
+
+            if (option.equals("N")) {
+                println("Account switch cancelled!");
+                return;
+            }
+            println("");
+
+            session.mainAccount = targetAccount;
+            println("Switched to account ID " + targetAccount.getAccountId() + " successfully!");
+
+        } catch (IllegalArgumentException e) {
+            println("Error" + e.getMessage());
+        } catch (Exception e) {
+            println("Unexpected error: " + e.getMessage());
+        }
+
+
     }
 
     // ================= PRINT =================
