@@ -22,16 +22,9 @@ public class BankAccount {
     private final List<Transaction> transactions = new ArrayList<>();
 
     public BankAccount(String holder) {
-
-        Objects.requireNonNull(holder, "Holder cannot be null");
-
-        if (holder.isBlank()) {
-            throw new IllegalArgumentException("holder cannot be blank");
-        }
-
         this.accountId = nextId++;
         this.accountStatus = AccountStatus.ACTIVE;
-        this.holder = holder;
+        this.holder = setHolder(holder);
         this.balance = BigDecimal.ZERO;
         this.createdAt = LocalDateTime.now();
     }
@@ -139,12 +132,31 @@ public class BankAccount {
     public void setAccountStatus(AccountStatus newStatus) {
         Objects.requireNonNull(newStatus, "Account status cannot be null");
 
+        if (this.accountStatus == newStatus) {
+            throw new IllegalArgumentException(String.format("Account Status is already %s", newStatus));
+        }
+
         if (!this.accountStatus.canChangeTo(newStatus)) {
             throw new IllegalArgumentException(String.format("Account Status cannot be changed from %s to %s",
                     this.accountStatus, newStatus));
         }
 
         this.accountStatus = newStatus;
+    }
+
+    private String setHolder(String holder) {
+        Objects.requireNonNull(holder, "Holder cannot be null");
+
+        if (holder.isBlank()) {
+            throw new IllegalArgumentException("holder cannot be blank");
+        }
+
+        boolean hasNumber = holder.matches(".*\\d.*");
+        if (hasNumber) {
+            throw new IllegalArgumentException("holder cannot contain numbers");
+        }
+
+        return captalizeString(holder);
     }
 
     // Internal methods
@@ -158,6 +170,19 @@ public class BankAccount {
 
     private void recordTransaction(Transaction transaction) {
         this.transactions.add(transaction);
+    }
+
+    private String captalizeString(String string) {
+        String[] words = string.split(" ");
+        StringBuilder result = new StringBuilder();
+
+        for (String word : words) {
+            result.append(Character.toUpperCase(word.charAt(0)))
+                    .append(word.substring(1).toLowerCase())
+                    .append(" ");
+        }
+
+        return result.toString().trim();
     }
 
     @Override
